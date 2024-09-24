@@ -1,0 +1,4 @@
+# Konfiguracja TimeReward
+reward-interval: 30   # Czas (w minutach) między nagrodami
+max-time: 300         # Maksymalny czas (w minutach), po którym gracz przestaje dostawać nagrody (5 godzin = 300 minut)
+reward-amount: 10   # Kwota nagrody za każde 30 minut gry

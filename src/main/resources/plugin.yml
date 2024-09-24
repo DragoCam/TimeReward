@@ -1,0 +1,8 @@
+name: '${project.name}'
+version: '${project.version}'
+authors: ${authors}
+website: '${project.url}'
+main: pl.lunarhost.timereward.TimeRewardPlugin
+api-version: '${apiVersion}'
+description: ${project.description}
+depend: [Vault] [LunarIdleDetector]
