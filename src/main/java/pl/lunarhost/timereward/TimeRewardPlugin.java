@@ -1,77 +1,74 @@
 package pl.lunarhost.timereward;
 
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashMap;
-import java.util.Map;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 
 public class TimeRewardPlugin extends JavaPlugin {
 
-    private final Map<Player, Integer> playTimeMap = new HashMap<>();
     private Economy economy;
-
-    private int rewardInterval;
-    private int maxTime;
-    private double rewardAmount;
 
     @Override
     public void onEnable() {
-        // Ładuj konfigurację
-        saveDefaultConfig();
-        loadConfigValues();
+        setupEconomy();
+        startRewardTask();
+    }
 
-        // Ustaw Vault (ekonomia)
-        if (!setupEconomy()) {
-            getLogger().severe("Vault nie został znaleziony. Wyłączam plugin.");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
+    private void setupEconomy() {
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp != null) {
+            economy = rsp.getProvider();
         }
-
-        // Zarejestruj zadanie cykliczne
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::rewardPlayers, 0L, 20L * 60 * rewardInterval);
     }
 
-    private void loadConfigValues() {
-        FileConfiguration config = getConfig();
-        rewardInterval = config.getInt("reward-interval", 30);
-        maxTime = config.getInt("max-time", 300);
-        rewardAmount = config.getDouble("reward-amount", 10.0);
-    }
-
-    private void rewardPlayers() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            int playTime = playTimeMap.getOrDefault(player, 0);
-
-            if (playTime < maxTime) {
-                // Dodaj pieniądze za pomocą Vault
-                EconomyResponse response = economy.depositPlayer(player, rewardAmount);
-                if (response.transactionSuccess()) {
-                    player.sendMessage(ChatColor.GREEN + "Otrzymałeś " + rewardAmount + "$ za grę!");
-                    playTimeMap.put(player, playTime + rewardInterval);
+    private void startRewardTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : getServer().getOnlinePlayers()) {
+                    giveReward(player);
                 }
             }
+        }.runTaskTimer(this, 0, 5 * 60 * 20); // co 5 minut
+    }
+
+    private void giveReward(Player player) {
+        int amount = 15; // Kwota do nagrody
+        EconomyResponse response = economy.depositPlayer(player, amount);
+        if (response.transactionSuccess()) {
+            sendRewardMessage(player, amount);
+        } else {
+            player.sendMessage(formatMessage("&cError: Unable to give reward!"));
         }
     }
 
-    @Override
-    public void onDisable() {
-        // Zapisz dane graczy przy wyłączeniu pluginu (np. do pliku lub bazy danych)
+    private void sendRewardMessage(Player player, int amount) {
+        String message = "&8«&6*&8»&8&m-----------&8«&6*&8»&2 Time Reward &8«&6*&8»&8&m-----------&8«&6*&8»\n" +
+                centerMessage("                   &7You have received &a$" + amount + "&7!") + "\n" +
+                "&8«&6*&8»&8&m-----------&8«&6*&8»&2 Time Reward &8«&6*&8»&8&m-----------&8«&6*&8»";
+        player.sendMessage(formatMessage(message));
     }
 
-    // Metoda pobierająca instancję ekonomii Vault
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-            return false;
+    private String centerMessage(String message) {
+        int maxLength = 50; // Maksymalna długość linii
+        int messageLength = message.length();
+        int spaces = (maxLength - messageLength) / 2;
+
+        StringBuilder centeredMessage = new StringBuilder();
+        for (int i = 0; i < spaces; i++) {
+            centeredMessage.append(" ");
         }
-        economy = rsp.getProvider();
-        return economy != null;
+        centeredMessage.append(message);
+
+        return centeredMessage.toString();
+    }
+
+    private String formatMessage(String message) {
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }
