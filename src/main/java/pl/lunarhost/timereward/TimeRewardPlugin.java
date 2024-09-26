@@ -34,11 +34,11 @@ public class TimeRewardPlugin extends JavaPlugin {
                     giveReward(player);
                 }
             }
-        }.runTaskTimer(this, 0, 5 * 60 * 20); // co 5 minut
+        }.runTaskTimer(this, 0, 10 * 60 * 20);
     }
 
     private void giveReward(Player player) {
-        int amount = 15; // Kwota do nagrody
+        int amount = 15;
         EconomyResponse response = economy.depositPlayer(player, amount);
         if (response.transactionSuccess()) {
             sendRewardMessage(player, amount);
@@ -49,13 +49,13 @@ public class TimeRewardPlugin extends JavaPlugin {
 
     private void sendRewardMessage(Player player, int amount) {
         String message = "&8«&6*&8»&8&m-----------&8«&6*&8»&2 Time Reward &8«&6*&8»&8&m-----------&8«&6*&8»\n" +
-                centerMessage("                   &7You have received &a$" + amount + "&7!") + "\n" +
+                centerMessage("       &7Otrzymałeś &a$" + amount + "&7 za aktywność na serwerze!") + "\n" +
                 "&8«&6*&8»&8&m-----------&8«&6*&8»&2 Time Reward &8«&6*&8»&8&m-----------&8«&6*&8»";
         player.sendMessage(formatMessage(message));
     }
 
     private String centerMessage(String message) {
-        int maxLength = 50; // Maksymalna długość linii
+        int maxLength = 50;
         int messageLength = message.length();
         int spaces = (maxLength - messageLength) / 2;
 
